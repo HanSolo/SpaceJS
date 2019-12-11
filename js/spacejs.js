@@ -167,14 +167,18 @@ class Star {
         this.vY = (0.5 + (((Math.random() * 1.5) + this.minSpeedY) * this.vYVariation)) << 0;
     }
 
-    update(i) {
+    respawn() {
+        this.x = (0.5 + (Math.random() * WIDTH)) << 0;
+        this.y = -this.size;
+    }
+
+    update() {
         this.x = this.x + (0.5 + this.vX) << 0;
         this.y = this.y + (0.5 + this.vY) << 0;
 
         // Respawn star
         if(this.y > HEIGHT + this.size) {
-            stars[i].x = (0.5 + (Math.random() * WIDTH)) << 0;
-            stars[i].y = -this.size;
+            this.respawn();
         }
     }
 }
@@ -184,13 +188,17 @@ initStars();
 let asteroids             = [];
 class Asteroid {
     constructor(image) {
+        // Image
+        this.image = image;
+
+        this.init();
+    }
+
+    init() {
         const MAX_VALUE      = 10;
         const X_VARIATION    = 2;
         const MIN_SPEED_Y    = 2;
         const MIN_ROTATION_R = 0.00174533;
-
-        // Image
-        this.image = image;
 
         // Position
         this.x   = Math.random() * WIDTH;
@@ -223,6 +231,11 @@ class Asteroid {
         this.rotateRight = Math.random() >= 0.5;
     }
 
+    respawn() {
+        this.image.src = asteroidImages[getRandomInt(0, asteroidImages.length)];
+        this.init();
+    }
+
     update() {
         this.x = this.x + this.vX;
         this.y = this.y + this.vY;
@@ -244,10 +257,7 @@ class Asteroid {
 
         // Respawn asteroid
         if(this.x < -this.size || this.x - this.radius > WIDTH || this.y - this.height > HEIGHT) {
-            let idx = asteroids.indexOf(this);
-            if (idx > -1) {
-                asteroids[idx] = spawnAsteroid();
-            }
+            this.respawn();
         }
     }
 }
@@ -298,10 +308,13 @@ class Enemy {
     constructor(image) {
         // Image
         this.image = image;
+        this.init();
+    }
 
+    init() {
         // Position
         this.x = Math.random() * WIDTH;
-        this.y = -image.height;
+        this.y = -this.image.height;
 
         // Value
         this.value = getRandomInt(0, Enemy.MAX_VALUE) + 1;
@@ -325,13 +338,18 @@ class Enemy {
         this.lastShotY = 0;
     }
 
-    update(i) {
+    respawn() {
+        this.image.src = enemyImages[getRandomInt(0, enemyImages.length)];
+        this.init();
+    }
+
+    update() {
         this.x += this.vX;
         this.y += this.vY;
 
         // Respawn Enemy
         if (this.x < -this.size || this.x > WIDTH + this.size || this.y > HEIGHT + this.size) {
-            enemies[i] = spawnEnemy();
+            this.respawn();
         }
     }
 }
@@ -523,7 +541,7 @@ class Hit {
 // Initializations
 function initStars() {
     for (let i = 0 ; i < NO_OF_STARS ; i++) {
-        let star = spawnStar();
+        let star = new Star();
         star.y = Math.random() * HEIGHT;
         stars[i] = star;
     }
@@ -531,34 +549,22 @@ function initStars() {
 
 function initAsteroids() {
     for (let i = 0 ; i < NO_OF_ASTEROIDS ; i++) {
-        asteroids[i] = spawnAsteroid();
+        let img = new Image();
+        img.src = asteroidImages[getRandomInt(0, asteroidImages.length)];
+        asteroids[i] = new Asteroid(img);
     }
 }
 
 function initEnemies() {
     for (let i = 0 ; i < NO_OF_ENEMIES ; i ++) {
-        enemies[i] = spawnEnemy();
+        let img = new Image();
+        img.src = enemyImages[getRandomInt(0, enemyImages.length)];
+        enemies[i] = new Enemy(img);
     }
 }
 
 
 // Spawn different objects
-function spawnStar() {
-    return new Star();
-}
-
-function spawnAsteroid() {
-    let img = new Image();
-    img.src = asteroidImages[getRandomInt(0, asteroidImages.length)];
-    return new Asteroid(img);
-}
-
-function spawnEnemy() {
-    let img = new Image();
-    img.src = enemyImages[getRandomInt(0, enemyImages.length)];
-    return new Enemy(img);
-}
-
 function spawnTorpedo(x, y) {
     torpedos.push(new Torpedo(torpedoImg, x, y));
     new Audio('snd/laserSound.wav').play();
@@ -598,9 +604,9 @@ function gameOver() {
             explosions     = [];
             torpedos       = [];
             enemyTorpedos  = [];
-            initStars();
-            initAsteroids();
-            initEnemies();
+            for (let i = 0 ; i < stars.length ; i++) { stars[i].respawn(); }
+            for (let i = 0 ; i < asteroids.length ; i++) { asteroids[i].respawn(); }
+            for (let i = 0 ; i < enemies.length ; i++) { enemies[i].respawn(); }
             spaceShip.x  = WIDTH * 0.5;
             spaceShip.y  = HEIGHT - 2 * spaceShip.image.height;
             spaceShip.vX = 0;
@@ -653,6 +659,7 @@ function updateAndDraw(ctx) {
     for (let i = 0 ; i < NO_OF_ASTEROIDS ; i++) {
         let asteroid = asteroids[i];
         asteroid.update();
+
         ctx.save();
         ctx.translate(asteroid.cX, asteroid.cY);
         ctx.rotate(asteroid.rot);
@@ -669,7 +676,7 @@ function updateAndDraw(ctx) {
                 if (asteroid.hits <= 0) {
                     explosions.push(new Explosion(asteroid.cX - Explosion.FRAME_CENTER * asteroid.scale, asteroid.cY - Explosion.FRAME_CENTER * asteroid.scale, asteroid.vX, asteroid.vY, asteroid.scale));
                     score += asteroid.value;
-                    asteroids[i] = spawnAsteroid();
+                    asteroids[i].respawn();
                     torpedosToRemove.push(torpedo);
                     new Audio('snd/explosionSound.wav').play();
                 } else {
@@ -693,7 +700,7 @@ function updateAndDraw(ctx) {
                 spaceShipExplosion.countY = 0;
                 spaceShipExplosion.x      = spaceShip.x - SpaceShipExplosion.FRAME_WIDTH;
                 spaceShipExplosion.y      = spaceShip.y - SpaceShipExplosion.FRAME_HEIGHT;
-                asteroids[i] = spawnAsteroid();
+                asteroids[i].respawn();
                 if (spaceShip.shield) {
                     new Audio('snd/explosionSound.wav').play();
                     explosions.push(
@@ -714,7 +721,7 @@ function updateAndDraw(ctx) {
     // Draw Enemies
     for (let i = 0 ; i < NO_OF_ENEMIES ; i++) {
         let enemy = enemies[i];
-        enemy.update(i);
+        enemy.update();
         ctx.save();
         ctx.translate(enemy.x - enemy.radius, enemy.y - enemy.radius);
         ctx.save();
@@ -739,7 +746,7 @@ function updateAndDraw(ctx) {
             if (isHitCircleCircle(torpedo.x, torpedo.y, torpedo.radius, enemy.x, enemy.y, enemy.radius)) {
                 explosions.push(new Explosion(enemy.x - Explosion.FRAME_WIDTH * 0.25, enemy.y - Explosion.FRAME_HEIGHT * 0.25, enemy.vX, enemy.vY, 0.5));
                 score += enemy.value;
-                enemies[i] = spawnEnemy();
+                enemies[i].respawn();
                 torpedosToRemove.push(torpedo);
                 new Audio('snd/spaceShipExplosionSound.wav').play();
             }
@@ -758,7 +765,7 @@ function updateAndDraw(ctx) {
                 spaceShipExplosion.countY = 0;
                 spaceShipExplosion.x      = spaceShip.x - SpaceShipExplosion.FRAME_WIDTH;
                 spaceShipExplosion.y      = spaceShip.y - SpaceShipExplosion.FRAME_HEIGHT;
-                enemies[i]                = spawnEnemy();
+                enemies[i].respawn();
                 new Audio('snd/spaceShipExplosionSound.wav').play();
                 if (spaceShip.shield) {
                     explosions.push(new Explosion(enemy.x - Explosion.FRAME_WIDTH * 0.125, enemy.y - Explosion.FRAME_HEIGHT * 0.125, enemy.vX, enemy.vY, 0.5));
