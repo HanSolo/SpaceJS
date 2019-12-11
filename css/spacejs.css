@@ -1,0 +1,24 @@
+@font-face {
+    font-family: 'Spaceboy';
+    src: url('../fnt/spaceboy.ttf');
+}
+
+#container {
+    width     : 700px;
+    height    : 700px;
+    margin    : 0px auto;
+    text-align: center;
+}
+
+#canvas {
+    width   : 700px;
+    height  : 700px;
+    padding : 0;
+    margin  : auto;
+    display : block;
+    position: absolute;
+    top     : 0;
+    bottom  : 0;
+    left    : 0;
+    right   : 0;
+}
