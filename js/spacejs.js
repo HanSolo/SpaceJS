@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 const WIDTH                   = 700;
 const HEIGHT                  = 700;
 const NO_OF_STARS             = 200;
@@ -676,7 +675,7 @@ function updateAndDraw(ctx) {
                 if (asteroid.hits <= 0) {
                     explosions.push(new Explosion(asteroid.cX - Explosion.FRAME_CENTER * asteroid.scale, asteroid.cY - Explosion.FRAME_CENTER * asteroid.scale, asteroid.vX, asteroid.vY, asteroid.scale));
                     score += asteroid.value;
-                    asteroids[i].respawn();
+                    asteroid.respawn();
                     torpedosToRemove.push(torpedo);
                     new Audio('snd/explosionSound.wav').play();
                 } else {
@@ -700,7 +699,7 @@ function updateAndDraw(ctx) {
                 spaceShipExplosion.countY = 0;
                 spaceShipExplosion.x      = spaceShip.x - SpaceShipExplosion.FRAME_WIDTH;
                 spaceShipExplosion.y      = spaceShip.y - SpaceShipExplosion.FRAME_HEIGHT;
-                asteroids[i].respawn();
+                asteroid.respawn();
                 if (spaceShip.shield) {
                     new Audio('snd/explosionSound.wav').play();
                     explosions.push(
@@ -746,7 +745,7 @@ function updateAndDraw(ctx) {
             if (isHitCircleCircle(torpedo.x, torpedo.y, torpedo.radius, enemy.x, enemy.y, enemy.radius)) {
                 explosions.push(new Explosion(enemy.x - Explosion.FRAME_WIDTH * 0.25, enemy.y - Explosion.FRAME_HEIGHT * 0.25, enemy.vX, enemy.vY, 0.5));
                 score += enemy.value;
-                enemies[i].respawn();
+                enemy.respawn();
                 torpedosToRemove.push(torpedo);
                 new Audio('snd/spaceShipExplosionSound.wav').play();
             }
@@ -765,7 +764,7 @@ function updateAndDraw(ctx) {
                 spaceShipExplosion.countY = 0;
                 spaceShipExplosion.x      = spaceShip.x - SpaceShipExplosion.FRAME_WIDTH;
                 spaceShipExplosion.y      = spaceShip.y - SpaceShipExplosion.FRAME_HEIGHT;
-                enemies[i].respawn();
+                enemy.respawn();
                 new Audio('snd/spaceShipExplosionSound.wav').play();
                 if (spaceShip.shield) {
                     explosions.push(new Explosion(enemy.x - Explosion.FRAME_WIDTH * 0.125, enemy.y - Explosion.FRAME_HEIGHT * 0.125, enemy.vX, enemy.vY, 0.5));
